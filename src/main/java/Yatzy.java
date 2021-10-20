@@ -19,7 +19,6 @@ public class Yatzy {
     }
 
     public static int yatzy(int d1, int d2, int d3, int d4, int d5) {
-        //Arrays.asList(d1, d2, d3, d4, d5).stream();
         Map<Integer, Long> counts  = Stream.of(d1, d2, d3, d4, d5)
             .collect(groupingBy(d -> d, Collectors.counting()));
         return counts.entrySet().stream()
@@ -29,7 +28,7 @@ public class Yatzy {
             .orElse(0);
     }
 
-    public static int number(int d1, int d2, int d3, int d4, int d5, int number){
+    public static int number(int d1, int d2, int d3, int d4, int d5, int number) {
         Map<Integer, Long> counts  = Stream.of(d1, d2, d3, d4, d5)
             .collect(groupingBy(d -> d, Collectors.counting()));
         return counts.getOrDefault(number,0L).intValue() * number;
@@ -48,14 +47,15 @@ public class Yatzy {
     }
 
     protected int[] dice;
-    public Yatzy(int d1, int d2, int d3, int d4, int _5)
+
+    public Yatzy(int d1, int d2, int d3, int d4, int d5)
     {
         dice = new int[5];
         dice[0] = d1;
         dice[1] = d2;
         dice[2] = d3;
         dice[3] = d4;
-        dice[4] = _5;
+        dice[4] = d5;
     }
 
     public int fours() {
@@ -75,8 +75,9 @@ public class Yatzy {
         return dice.stream().collect(groupingBy(identity(), countingInt));
     }
 
-    public static List<Integer> findPairs(List<Integer> dice2) {
-        return counts(dice2).entrySet().stream()
+    public static List<Integer> findPairs(int d1, int d2, int d3, int d4, int d5) {
+        List<Integer> dice = asList(d1, d2, d3, d4, d5);
+        return counts(dice).entrySet().stream()
             .filter(entry -> entry.getValue() >= 2)
             .map(Map.Entry::getKey)
             .sorted(Comparator.reverseOrder())
@@ -84,8 +85,7 @@ public class Yatzy {
     }
 
     public static int score_pair(int d1, int d2, int d3, int d4, int d5) {
-        List<Integer> dice = asList(d1, d2, d3, d4, d5);
-        List<Integer> pairs = findPairs(dice);
+        List<Integer> pairs = findPairs(d1, d2, d3, d4, d5);
         if (pairs.isEmpty()) {
             return 0;
         }  else {
@@ -94,8 +94,7 @@ public class Yatzy {
     }
 
     public static int two_pair(int d1, int d2, int d3, int d4, int d5) {
-        List<Integer> dice = asList(d1, d2, d3, d4, d5);
-        List<Integer> pairs = findPairs(dice);
+        List<Integer> pairs = findPairs(d1, d2, d3, d4, d5);
         if (pairs.size() >= 2) {
             return pairs.stream()
                 .mapToInt(pair -> pair * 2)
@@ -104,8 +103,8 @@ public class Yatzy {
         return 0;
     }
 
-    public static int four_of_a_kind(int _1, int _2, int d3, int d4, int d5) {
-        List<Integer> dice = asList(_1, _2, d3, d4, d5);
+    public static int four_of_a_kind(int d1, int d2, int d3, int d4, int d5) {
+        List<Integer> dice = asList(d1, d2, d3, d4, d5);
         return counts(dice).entrySet().stream()
             .filter(entry -> entry.getValue() >= 4)
             .map(Map.Entry::getKey)
@@ -122,77 +121,63 @@ public class Yatzy {
             .orElse(0) * 3;
     }
 
-    public static int smallStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[0] == 1 &&
-            tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1)
+    public static int sum(List<Integer> dice) {
+        return dice.stream().mapToInt(Integer::intValue).sum();
+    }
+
+    private static List<Integer> sort(int d1, int d2, int d3, int d4, int d5) {
+        List<Integer> dice = asList(d1, d2, d3, d4, d5);
+        return dice.stream().sorted().collect(toList());
+    }
+
+    public static boolean isSmallStraight(int d1, int d2, int d3, int d4, int d5) {
+        return sort(d1, d2, d3, d4, d5).equals(asList(1, 2, 3, 4, 5));
+    }
+
+    public static boolean isLargeStraight(int d1, int d2, int d3, int d4, int d5) {
+        return sort(d1, d2, d3, d4, d5).equals(asList(2, 3, 4, 5, 6));
+    }
+
+    public static boolean isYatzy() {
+        List<Integer> dice = new ArrayList<>();
+        return counts(dice)
+            .values()
+            .stream()
+            .anyMatch(count -> count == 5);
+    }
+
+    public static boolean isFullHouse(int d1, int d2, int d3, int d4, int d5) {
+        List<Integer> dice = asList(d1, d2, d3, d4, d5);
+        boolean hasThreeOfAKind = counts(dice).entrySet().stream()
+            .filter(entry -> entry.getValue() >= 3)
+            .map(Map.Entry::getKey)
+            .findFirst()
+            .orElse(0) != 0;
+        boolean hasPair = !findPairs(d1, d2, d3, d4, d5).isEmpty();
+        boolean isYatzy = isYatzy();
+        return hasThreeOfAKind && hasPair && !isYatzy;
+    }
+
+    public static int smallStraight(int d1, int d2, int d3, int d4, int d5) {
+        if (isSmallStraight(d1, d2, d3, d4, d5)) {
             return 15;
+        }
         return 0;
     }
 
-    public static int largeStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1
-            && tallies[5] == 1)
+    public static int largeStraight(int d1, int d2, int d3, int d4, int d5) {
+        if (isLargeStraight(d1, d2, d3, d4, d5)) {
             return 20;
+        }
         return 0;
     }
 
-    public static int fullHouse(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        boolean _2 = false;
-        int i;
-        int _2_at = 0;
-        boolean _3 = false;
-        int _3_at = 0;
-
-
-
-
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 2) {
-                _2 = true;
-                _2_at = i+1;
-            }
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 3) {
-                _3 = true;
-                _3_at = i+1;
-            }
-
-        if (_2 && _3)
-            return _2_at * 2 + _3_at * 3;
-        else
-            return 0;
+    public static int fullHouse(int d1, int d2, int d3, int d4, int d5) {
+        List<Integer> dice = asList(d1, d2, d3, d4, d5);
+        if (isFullHouse(d1, d2, d3, d4, d5)) {
+            return sum(dice);
+        }
+        return 0;
     }
 }
 
